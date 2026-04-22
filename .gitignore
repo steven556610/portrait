@@ -1,0 +1,20 @@
+# 忽略環境變數與 API Key
+.env
+
+# 忽略所有對話紀錄與分析報告 (保護個資)
+data/
+
+# 忽略 Chroma 向量資料庫與本地模型
+model/
+
+# 忽略生成的文字雲圖片
+visualize/
+
+# Python 快取檔案
+__pycache__/
+*.pyc
+*.pyo
+
+# OS 會產生的隱藏檔案
+.DS_Store
+Thumbs.db
