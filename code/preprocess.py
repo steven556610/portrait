@@ -8,8 +8,7 @@ def extract_person_name_from_filename(filename: str) -> str:
     """
     從 LINE 匯出的檔名中解析對象姓名。
     例如：
-      '[LINE] 與Jennifer 張書齊的聊天.txt' -> 'Jennifer 張書齊'
-      '[LINE]家妤☆.txt'                   -> '家妤☆'
+      '[LINE]小白.txt'                   -> '小白'
     """
     basename = os.path.basename(filename)
     # 格式一：[LINE] 與XXX的聊天.txt
