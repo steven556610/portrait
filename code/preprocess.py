@@ -2,7 +2,7 @@ import os
 import re
 
 # 你在不同對話中可能使用的顯示名稱清單（全部列在這裡）
-YOUR_NAMES = ["Steven Su", "蘇威霖 Steven"]
+YOUR_NAMES = ['小王']
 
 def extract_person_name_from_filename(filename: str) -> str:
     """
