@@ -45,7 +45,7 @@ def save_to_markdown(data: dict, output_path: str, person_name: str):
 # -----------------------------------------------------------------------
 # 單一人物完整分析流程
 # -----------------------------------------------------------------------
-def build_persona(file_path: str, api_key: str, max_chars: int = 80000):
+def build_persona(file_path: str, max_chars: int = 240000):
     person_name = extract_person_name_from_filename(file_path)
     db_dir      = get_db_dir(person_name)
     report_path = get_report_path(person_name)
@@ -74,25 +74,23 @@ def build_persona(file_path: str, api_key: str, max_chars: int = 80000):
     generate_wordcloud(text_data, output_dir=VIS_DIR,
                        filename=f"{person_name}_wordcloud.png")
 
-    # [3] Gemini 萃取
-    print("  [3/4] Gemini 結構化萃取...")
-    extracted_data = extract_info(text_data, api_key)
+    # [3] Ollama 萃取
+    print("  [3/4] Ollama (Local) 結構化萃取...")
+    extracted_data = extract_info(text_data)
     save_to_markdown(extracted_data, report_path, person_name)
 
     # [4] 建立 ChromaDB
     print(f"  [4/4] 建立向量記憶庫 -> {db_dir} ...")
     os.makedirs(os.path.dirname(db_dir), exist_ok=True)
-    setup_vector_db(text_data, api_key, db_dir)
+    setup_vector_db(text_data, db_dir)
     print(f"  ✅ {person_name} 資料庫建立完成！")
 
 # -----------------------------------------------------------------------
 # CLI 入口
 # -----------------------------------------------------------------------
 if __name__ == "__main__":
-    API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-    if not API_KEY:
-        print("[錯誤] 請先在 .env 中設定 GOOGLE_API_KEY")
-        sys.exit(1)
+    # API_KEY 已不再強制需要，改用在地端 Ollama
+    # API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
     build_all = "--build-all" in sys.argv
 
@@ -112,7 +110,7 @@ if __name__ == "__main__":
         for i, fpath in enumerate(line_files, 1):
             print(f"\n[{i}/{len(line_files)}] {os.path.basename(fpath)}")
             try:
-                build_persona(fpath, API_KEY)
+                build_persona(fpath)
             except Exception as e:
                 print(f"  ❌ 發生錯誤：{e}")
         print("\n\n🎉 所有對象分析完畢！")
@@ -133,12 +131,12 @@ if __name__ == "__main__":
             sys.exit(1)
 
         print(f"擷取 {len(text_data):,} 字元 | 開始全流程分析...")
-        build_persona(os.path.join(os.path.dirname(__file__), DATA_PATH), API_KEY)
+        build_persona(os.path.join(os.path.dirname(__file__), DATA_PATH))
 
         # RAG 測試查詢
         from memory import load_vector_db
         vector_db = load_vector_db(db_dir)
         question = "她最近有說喜歡吃什麼或討厭什麼嗎？"
         print(f"\n🧐 測試問題: {question}")
-        answer = query_persona_rag_gemini(question, vector_db, API_KEY)
-        print(f"🤖 Gemini 回答: {answer}")
+        answer = query_persona_rag_gemini(question, vector_db)
+        print(f"🤖 回答: {answer}")

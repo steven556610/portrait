@@ -42,6 +42,8 @@ def preprocess_line_data(file_path: str, target_name: str = None,
 
     cleaned_messages = []
     skip_keywords = ["貼圖", "圖片", "照片", "已收回訊息", "語音訊息", "視訊通話", "通話時間"]
+    # 無意義的短語氣詞
+    stop_words = {"哈哈", "嗯嗯", "哦哦", "喔喔", "嘿嘿", "好的", "等等", "笑死", "對啊", "了解", "好喔", "好哦", "是喔", "是喔", "真假", "拜拜"}
 
     with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
@@ -59,8 +61,20 @@ def preprocess_line_data(file_path: str, target_name: str = None,
                 parts = line.split(target_name, 1)
                 if len(parts) == 2:
                     message = parts[1].strip()
-                    # 過濾系統型訊息
-                    if message and not any(kw in message for kw in skip_keywords):
-                        cleaned_messages.append(message)
+                    # 啟發式過濾：去除系統訊息、超短無意義對話
+                    if not message:
+                        continue
+                    
+                    if any(kw in message for kw in skip_keywords):
+                        continue
+                        
+                    # 把純標點符號或只有一兩個字的語氣詞剃除
+                    pure_text = re.sub(r'[^\w\s]', '', message).strip()
+                    if len(pure_text) <= 2 and pure_text in stop_words:
+                        continue
+                    if len(pure_text) == 0:
+                        continue
+                        
+                    cleaned_messages.append(message)
 
     return "\n".join(cleaned_messages)

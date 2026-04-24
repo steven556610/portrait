@@ -1,4 +1,4 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel, Field
@@ -14,12 +14,12 @@ class Persona(BaseModel):
     interests: list = Field(description="包含感興趣的主題、影視音樂、遊戲或嗜好的清單，若無則傳回空陣列")
     goals_and_concerns: list = Field(description="包含現階段的人生規劃、近期目標、或是正在煩惱擔憂的事，若無則傳回空陣列")
 
-def extract_info(text: str, api_key: str):
+def extract_info(text: str):
     """
-    方案 B：核心資訊提取 (使用 LangChain + Gemini API)
+    方案 B：核心資訊提取 (使用 LangChain + Ollama Qwen)
     優化提示詞，強調「長期價值」與「結構化」。
     """
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key)
+    llm = ChatOllama(model="qwen2.5:14b", temperature=0.2)
     parser = JsonOutputParser(pydantic_object=Persona)
     
     # 這裡幫你整理和優化了提示詞 (Prompt)

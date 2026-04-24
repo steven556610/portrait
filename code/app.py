@@ -11,7 +11,8 @@ REPORTS_DIR = os.path.join(ROOT_DIR, "data", "reports")
 VIS_DIR     = os.path.join(ROOT_DIR, "visualize")
 
 load_dotenv(os.path.join(ROOT_DIR, ".env"))
-API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+# API_KEY 已不再需要
+# API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
 # -----------------------------------------------------------------------
 # 工具函式
@@ -117,13 +118,13 @@ def load_db(person_name: str):
 # RAG 查詢
 # -----------------------------------------------------------------------
 def rag_query(question: str, vector_db, k: int = 5):
-    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_community.chat_models import ChatOllama
     from langchain_core.prompts import ChatPromptTemplate
 
     docs = vector_db.similarity_search(question, k=k)
     context = "\n---\n".join([doc.page_content for doc in docs])
 
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=API_KEY)
+    llm = ChatOllama(model="qwen2.5:14b", temperature=0.3)
     prompt = ChatPromptTemplate.from_template(
         "你是一個專業的私人助理，協助使用者從 LINE 對話記錄中找出關於特定人物的資訊。\n"
         "請根據以下的【對話片段記憶】，用繁體中文準確且條理清晰地回答問題。\n"
@@ -157,6 +158,22 @@ with st.sidebar:
     )
 
     st.markdown(f'<div class="persona-badge">👤 {selected_persona}</div>', unsafe_allow_html=True)
+
+    # 🚨 詐騙偵測風險警示 (Mockup)
+    st.markdown("---")
+    st.markdown("""
+        <div style="background-color:#4a1c1c; border-left:4px solid #f44336; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+            <p style="color:#ffcdd2; margin: 0; font-weight: bold;">🔴 高風險警示 (Risk Score: 85/100)</p>
+        </div>
+    """, unsafe_allow_html=True)
+    with st.expander("👉 查看警示詳細原因"):
+        st.markdown(
+            "⚠️ **高風險特徵檢測結果**\n"
+            "- 對話中頻繁提及 `投資`、`虛擬貨幣` 等詞彙。\n"
+            "- 存在引導匯款或詢問銀行帳戶的語句。\n"
+            "- 提及「保證獲利」或「內線消息」。\n\n"
+            "*(備註：此為風險模型預測範例，後續可串接外部詐騙知識圖譜進階判定)*"
+        )
     st.divider()
 
     # 文字雲

@@ -1,6 +1,6 @@
 import os
 from langchain_community.vectorstores import Chroma
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.chat_models import ChatOllama
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms import LlamaCpp
@@ -14,7 +14,7 @@ def _get_embeddings():
     return HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
 
-def setup_vector_db(text_data: str, api_key: str, persist_dir: str = "../model/chroma_db"):
+def setup_vector_db(text_data: str, persist_dir: str = "../model/chroma_db"):
     """
     方案 C 基礎：對話切分並存入 Chroma DB 作為長期記憶。
     """
@@ -51,16 +51,16 @@ def load_vector_db(persist_dir: str = "../model/chroma_db"):
     embeddings = _get_embeddings()
     return Chroma(persist_directory=persist_dir, embedding_function=embeddings)
 
-def query_persona_rag_gemini(question: str, vector_db, api_key: str):
-    """使用 Gemini 進行 RAG 長期記憶查詢"""
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key)
+def query_persona_rag_gemini(question: str, vector_db):
+    \"\"\"使用 Ollama 進行 RAG 長期記憶查詢 (為了相容舊檔名暫不更名)\"\"\"
+    llm = ChatOllama(model="qwen2.5:14b", temperature=0.3)
     
     # 尋找與問題最相關的 5 個對話片段
     docs = vector_db.similarity_search(question, k=5)
     context = "\n".join([doc.page_content for doc in docs])
     
     prompt = ChatPromptTemplate.from_template(
-        "你是一個專業的私人助理。請根據以下的對話歷史記憶，準確回答使用者的問題。\n"
+        "你是一個專業的私人助理。請根據以下的對話歷史記憶，用繁體中文準確回答使用者的問題。\n"
         "如果記憶中缺乏相關資訊，請直接回答「不知道」，絕不可自行捏造資訊。\n\n"
         "【對話歷史記憶】\n"
         "{context}\n\n"
